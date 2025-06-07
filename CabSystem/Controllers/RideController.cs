@@ -13,11 +13,13 @@ namespace CabSystem.Controllers
     {
         private readonly IRideRepository _rideRepository;
         private readonly IMapper _mapper;
+        private readonly IPaymentRepository paymentRepository;
 
-        public RideController(IRideRepository rideRepository, IMapper mapper)
+        public RideController(IRideRepository rideRepository, IMapper mapper, IPaymentRepository paymentRepository)
         {
             _rideRepository = rideRepository;
             _mapper = mapper;
+            this.paymentRepository = paymentRepository;
         }
 
         [HttpGet("user/{userId}")]
@@ -44,13 +46,29 @@ namespace CabSystem.Controllers
         public async Task<IActionResult> CompleteRide(int rideId)
         {
             var ride = await _rideRepository.CompleteRideAsync(rideId);
-
             if (ride == null)
-                return NotFound($"Ride with ID {rideId} not found.");
+                return NotFound("Ride not found.");
 
-            var response = _mapper.Map<CompleteRideResponseDTO>(ride);
-            return Ok(response);
+            // ⏳ Simulate fare logic or assume ride already has Fare
+            var payment = new Payment
+            {
+                RideId = rideId,
+                Amount = ride.Fare,
+                Method = "Cash", // or default
+                Status = "Paid",
+                Timestamp = DateTime.UtcNow
+            };
+
+            var insertedPayment = await paymentRepository.InsertPaymentAsync(payment);
+
+            return Ok(new
+            {
+                Message = "Thank you for riding with us!",
+                Ride = _mapper.Map<CompleteRideResponseDTO>(ride),
+                Payment = _mapper.Map<PaymentDTO>(insertedPayment)
+            });
         }
+
 
     }
 }
