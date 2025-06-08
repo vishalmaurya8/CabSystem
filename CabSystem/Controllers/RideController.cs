@@ -3,12 +3,14 @@ using AutoMapper;
 using CabSystem.DTOs;
 using CabSystem.Models;
 using CabSystem.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CabSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // 🔐 Require authentication globally in this controller
     public class RideController : ControllerBase
     {
         private readonly IRideRepository _rideRepository;
@@ -22,6 +24,8 @@ namespace CabSystem.Controllers
             this.paymentRepository = paymentRepository;
         }
 
+        // 🧍 USER-ONLY: Get rides by userId
+        [Authorize(Roles = "User")]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetRidesByUserId(int userId)
         {
@@ -30,6 +34,8 @@ namespace CabSystem.Controllers
             return Ok(rideDtos);
         }
 
+        // 🧍 USER-ONLY: Book a ride
+        [Authorize(Roles = "User")]
         [HttpPost("book")]
         public async Task<IActionResult> BookRide([FromBody] CreateRideDTO dto)
         {
@@ -42,6 +48,8 @@ namespace CabSystem.Controllers
             return Ok(rideDto);
         }
 
+        // 🚗 DRIVER-ONLY: Complete a ride
+        [Authorize(Roles = "Driver")]
         [HttpPost("complete/{rideId}")]
         public async Task<IActionResult> CompleteRide(int rideId)
         {
@@ -49,12 +57,11 @@ namespace CabSystem.Controllers
             if (ride == null)
                 return NotFound("Ride not found.");
 
-            // ⏳ Simulate fare logic or assume ride already has Fare
             var payment = new Payment
             {
                 RideId = rideId,
                 Amount = ride.Fare,
-                Method = "Cash", // or default
+                Method = "Cash",
                 Status = "Paid",
                 Timestamp = DateTime.UtcNow
             };
@@ -68,7 +75,5 @@ namespace CabSystem.Controllers
                 Payment = _mapper.Map<PaymentDTO>(insertedPayment)
             });
         }
-
-
     }
 }

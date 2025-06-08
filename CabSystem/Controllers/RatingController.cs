@@ -2,12 +2,14 @@
 using CabSystem.DTOs;
 using CabSystem.Models;
 using CabSystem.Repositories;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CabSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class RatingController : ControllerBase
     {
         private readonly IRatingRepository _ratingRepo;
@@ -19,6 +21,8 @@ namespace CabSystem.Controllers
             _mapper = mapper;
         }
 
+
+        [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<IActionResult> AddRating([FromBody] CreateRatingDTO dto)
         {
@@ -33,6 +37,8 @@ namespace CabSystem.Controllers
             return Ok(_mapper.Map<RatingDTO>(result));
         }
 
+
+        [Authorize(Roles = "User")]
         [HttpPut("{rideId}")]
         public async Task<IActionResult> UpdateRating(int rideId, [FromBody] UpdateRatingDto dto)
         {
@@ -45,6 +51,8 @@ namespace CabSystem.Controllers
             return Ok(_mapper.Map<RatingDTO>(updated));
         }
 
+
+        [Authorize(Roles = "User")]
         [HttpGet("{rideId}")]
         public async Task<IActionResult> GetRatingByRideId(int rideId)
         {
@@ -55,6 +63,8 @@ namespace CabSystem.Controllers
             return Ok(_mapper.Map<RatingDTO>(rating));
         }
 
+
+        [Authorize(Roles = "User")]
         [HttpGet]
         public async Task<IActionResult> GetAllRatings()
         {
@@ -63,6 +73,8 @@ namespace CabSystem.Controllers
             return Ok(ratingDtos);
         }
 
+
+        [Authorize(Roles = "Driver")]
         [HttpGet("driver/{driverId}/average")]
         public async Task<IActionResult> GetAverageRatingForDriver(int driverId)
         {

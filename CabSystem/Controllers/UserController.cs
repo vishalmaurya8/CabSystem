@@ -1,10 +1,11 @@
 ﻿using CabSystem.Data;
+using CabSystem.DTOs;
+using CabSystem.Exceptions;
+using CabSystem.Models;
 //using CAB.DTOs;
 //using CAB.Models;
 //using CAB.Models.Domains;
 using CabSystem.Repositories; // Assuming IJwtTokenServices is here
-using CabSystem.DTOs;
-using CabSystem.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -31,11 +32,11 @@ namespace CAB.Controllers
                 return BadRequest(ModelState);
 
             if (dto.Role != "User" && dto.Role != "Driver")
-                return BadRequest("Invalid role. Must be 'User' or 'Driver'.");
+                throw new BadRequestException("Invalid role. Must be 'User' or 'Driver'.");
 
             // Check for existing email or phone
             if (await _dbContext.Users.AnyAsync(u => u.Email == dto.Email))
-                return BadRequest("Email already in use.");
+                throw new BadRequestException("Email already in use.");
 
             if (await _dbContext.Users.AnyAsync(u => u.Phone == dto.Phone))
                 return BadRequest("Phone already in use.");
@@ -84,10 +85,11 @@ namespace CAB.Controllers
         {
             var user = _dbContext.Users.SingleOrDefault(u => u.Email == dto.Email);
             if (user == null || !BCrypt.Net.BCrypt.Verify(dto.PasswordHash, user.PasswordHash))
-                return Unauthorized("Invalid credentials");
+                throw new UnauthorizedAccessException("Invalid credentials");
 
             var token = _jwtTokenService.GenerateJwtToken(user.Email, user.Role, user.UserId);
             return Ok(new { token });
         }
+
     }
 }
