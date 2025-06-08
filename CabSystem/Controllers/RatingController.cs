@@ -4,6 +4,7 @@ using CabSystem.Models;
 using CabSystem.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CabSystem.Exceptions; // ✅ For custom exceptions
 
 namespace CabSystem.Controllers
 {
@@ -21,36 +22,35 @@ namespace CabSystem.Controllers
             _mapper = mapper;
         }
 
-
         [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<IActionResult> AddRating([FromBody] CreateRatingDTO dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                throw new BadRequestException("Invalid rating data");
 
             var existing = await _ratingRepo.GetRatingByRideIdAsync(dto.RideId);
             if (existing != null)
-                return Conflict("Rating for this ride already exists.");
+                throw new ConflictException("Rating for this ride already exists.");
 
             var rating = _mapper.Map<Rating>(dto);
             var result = await _ratingRepo.AddRatingAsync(rating);
             return Ok(_mapper.Map<RatingDTO>(result));
         }
 
-
         [Authorize(Roles = "User")]
         [HttpPut("{rideId}")]
         public async Task<IActionResult> UpdateRating(int rideId, [FromBody] UpdateRatingDto dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            if (!ModelState.IsValid)
+                throw new BadRequestException("Invalid rating data");
 
             var updated = await _ratingRepo.UpdateRatingAsync(rideId, dto.Score, dto.Comments);
             if (updated == null)
-                return NotFound("Rating not found for the given ride ID.");
+                throw new NotFoundException("Rating not found for the given ride ID.");
 
             return Ok(_mapper.Map<RatingDTO>(updated));
         }
-
 
         [Authorize(Roles = "User")]
         [HttpGet("{rideId}")]
@@ -58,11 +58,10 @@ namespace CabSystem.Controllers
         {
             var rating = await _ratingRepo.GetRatingByRideIdAsync(rideId);
             if (rating == null)
-                return NotFound("Rating not found.");
+                throw new NotFoundException("Rating not found.");
 
             return Ok(_mapper.Map<RatingDTO>(rating));
         }
-
 
         [Authorize(Roles = "User")]
         [HttpGet]
@@ -73,18 +72,15 @@ namespace CabSystem.Controllers
             return Ok(ratingDtos);
         }
 
-
         [Authorize(Roles = "Driver")]
         [HttpGet("driver/{driverId}/average")]
         public async Task<IActionResult> GetAverageRatingForDriver(int driverId)
         {
             var result = await _ratingRepo.GetAverageRatingForDriverAsync(driverId);
-
             if (result == null)
-                return NotFound($"No ratings found for driver with ID {driverId}.");
+                throw new NotFoundException($"No ratings found for driver with ID {driverId}.");
 
             return Ok(result);
         }
-
     }
 }

@@ -25,5 +25,11 @@ namespace CabSystem.Repositories
         {
             return await _context.Payments.ToListAsync();
         }
+
+        public async Task<Payment?> GetPaymentByRideIdAsync(int rideId)
+        {
+            return await _context.Payments.FirstOrDefaultAsync(p => p.RideId == rideId);
+        }
+
     }
 }

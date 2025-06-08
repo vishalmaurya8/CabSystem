@@ -1,10 +1,10 @@
-﻿// Controllers/RideController.cs
-using AutoMapper;
+﻿using AutoMapper;
 using CabSystem.DTOs;
 using CabSystem.Models;
 using CabSystem.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using CabSystem.Exceptions; // ✅ Use your existing custom exception namespace
 
 namespace CabSystem.Controllers
 {
@@ -30,6 +30,9 @@ namespace CabSystem.Controllers
         public async Task<IActionResult> GetRidesByUserId(int userId)
         {
             var rides = await _rideRepository.GetRidesByUserIdAsync(userId);
+            if (rides == null || !rides.Any())
+                throw new NotFoundException($"No rides found for user ID {userId}");
+
             var rideDtos = _mapper.Map<IEnumerable<RideDTO>>(rides);
             return Ok(rideDtos);
         }
@@ -40,9 +43,13 @@ namespace CabSystem.Controllers
         public async Task<IActionResult> BookRide([FromBody] CreateRideDTO dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                throw new BadRequestException("Invalid ride data");
 
             var ride = _mapper.Map<Ride>(dto);
+
+            if (ride == null)
+                throw new BadRequestException("Failed to create ride from input");
+
             var result = await _rideRepository.BookRideAsync(ride);
             var rideDto = _mapper.Map<RideDTO>(result);
             return Ok(rideDto);
@@ -55,7 +62,7 @@ namespace CabSystem.Controllers
         {
             var ride = await _rideRepository.CompleteRideAsync(rideId);
             if (ride == null)
-                return NotFound("Ride not found.");
+                throw new NotFoundException($"Ride with ID {rideId} not found");
 
             var payment = new Payment
             {
