@@ -25,8 +25,10 @@ namespace CabSystem.Mappings
                 .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
                 .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.User.Phone.ToString()));
-
-
+            CreateMap<User, UserProfileDTO>().ReverseMap();
+            CreateMap<Ride, UserRideDTO>()
+                .ForMember(dest => dest.DriverName, opt => opt.MapFrom(src =>src.Driver != null && src.Driver.User != null ?src.Driver.User.Name: "Not Assigned"));
+            CreateMap<Rating, UserRatingDTO>();
         }
     }
 }
