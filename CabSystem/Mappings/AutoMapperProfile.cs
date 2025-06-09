@@ -21,6 +21,10 @@ namespace CabSystem.Mappings
             CreateMap<Rating, RatingDTO>().ReverseMap();
             CreateMap<CreatePaymentDTO, Payment>();
             CreateMap<Payment, PaymentDTO>();
+            CreateMap<Driver, DriverProfileDTO>()
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.User.Name))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.User.Phone.ToString()));
 
 
         }

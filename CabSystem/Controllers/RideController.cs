@@ -82,5 +82,7 @@ namespace CabSystem.Controllers
                 Payment = _mapper.Map<PaymentDTO>(insertedPayment)
             });
         }
+
+
     }
 }

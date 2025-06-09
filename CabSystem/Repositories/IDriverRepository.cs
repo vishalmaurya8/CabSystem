@@ -1,0 +1,14 @@
+﻿using CabSystem.DTOs;
+using CabSystem.Models;
+
+namespace CabSystem.Repositories
+{
+    public interface IDriverRepository
+    {
+        Task<Driver?> GetDriverByUserIdAsync(int userId);
+        Task UpdateDriverStatusAsync(int userId, string status);
+        Task<DriverStatsDTO> GetDriverStatsAsync(int userId);
+        Task<List<Ride>> GetAssignedRidesForDriverAsync(int driverId);
+        Task<List<Ride>> GetAssignedRidesForDriverByStatusAsync(int driverId, string status);
+    }
+}

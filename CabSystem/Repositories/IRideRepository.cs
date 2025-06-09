@@ -10,6 +10,5 @@ namespace CabSystem.Repositories
         Task<IEnumerable<Ride>> GetRidesByUserIdAsync(int userId);
         Task<Ride> BookRideAsync(Ride ride);
         Task<Ride?> CompleteRideAsync(int rideId);
-
     }
 }
