@@ -2,6 +2,7 @@ using CabSystem.Data;
 using CabSystem.Mappings;
 using CabSystem.Middleware;
 using CabSystem.Repositories;
+using CabSystem.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -77,6 +78,7 @@ builder.Services.AddScoped<IDriverRepository, DriverRepository>();
 builder.Services.AddScoped<IRideRepository, RideRepository>();
 builder.Services.AddScoped<IRatingRepository, RatingRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<IRideFareService, RideFareService>();
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 

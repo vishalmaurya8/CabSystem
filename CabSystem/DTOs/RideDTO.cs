@@ -9,5 +9,6 @@
         public string DropoffLocation { get; set; }
         public decimal Fare { get; set; }
         public string Status { get; set; }
+        public string  DriverNames { get; set; }
     }
 }

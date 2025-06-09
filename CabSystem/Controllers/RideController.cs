@@ -16,12 +16,14 @@ namespace CabSystem.Controllers
         private readonly IRideRepository _rideRepository;
         private readonly IMapper _mapper;
         private readonly IPaymentRepository paymentRepository;
+        private readonly IRideFareService fareService;
 
-        public RideController(IRideRepository rideRepository, IMapper mapper, IPaymentRepository paymentRepository)
+        public RideController(IRideRepository rideRepository, IMapper mapper, IPaymentRepository paymentRepository, IRideFareService fareService)
         {
             _rideRepository = rideRepository;
             _mapper = mapper;
             this.paymentRepository = paymentRepository;
+            this.fareService = fareService;
         }
 
         // 🧍 USER-ONLY: Get rides by userId
@@ -46,14 +48,18 @@ namespace CabSystem.Controllers
                 throw new BadRequestException("Invalid ride data");
 
             var ride = _mapper.Map<Ride>(dto);
-
             if (ride == null)
                 throw new BadRequestException("Failed to create ride from input");
+
+            // ✅ Fare calculation logic
+            var fare = fareService.CalculateFare(dto.PickupLocation, dto.DropoffLocation);
+            ride.Fare = fare;
 
             var result = await _rideRepository.BookRideAsync(ride);
             var rideDto = _mapper.Map<RideDTO>(result);
             return Ok(rideDto);
         }
+
 
         // 🚗 DRIVER-ONLY: Complete a ride
         [Authorize(Roles = "Driver")]
@@ -82,6 +88,7 @@ namespace CabSystem.Controllers
                 Payment = _mapper.Map<PaymentDTO>(insertedPayment)
             });
         }
+
 
 
     }

@@ -7,7 +7,7 @@ namespace CabSystem.DTOs
         [Required(ErrorMessage = "User ID is required")]
         public int UserId { get; set; }
 
-            
+
         public int DriverId { get; set; }
 
         
