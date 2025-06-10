@@ -8,5 +8,8 @@
         public string Method { get; set; }
         public string Status { get; set; }
         public DateTime Timestamp { get; set; }
+        public string? PickupLocation { get; set; }
+        public string? DropoffLocation { get; set; }
+
     }
 }

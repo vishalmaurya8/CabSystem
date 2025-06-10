@@ -15,11 +15,15 @@ namespace CabSystem.Repositories
 
         public async Task<Payment> InsertPaymentAsync(Payment payment)
         {
-            payment.Timestamp = DateTime.UtcNow;
             _context.Payments.Add(payment);
             await _context.SaveChangesAsync();
-            return payment;
+
+            // 🔁 Re-fetch with Ride included
+            return await _context.Payments
+                .Include(p => p.Ride)
+                .FirstOrDefaultAsync(p => p.PaymentId == payment.PaymentId);
         }
+
 
         public async Task<List<Payment>> GetAllPaymentsAsync()
         {
@@ -31,5 +35,13 @@ namespace CabSystem.Repositories
             return await _context.Payments.FirstOrDefaultAsync(p => p.RideId == rideId);
         }
 
+        public async Task<List<Payment>> GetPaymentsByUserIdAsync(int userId)
+        {
+            return await _context.Payments
+                .Include(p => p.Ride)
+                .ThenInclude(r => r.User)
+                .Where(p => p.Ride.UserId == userId)
+                .ToListAsync();
+        }
     }
 }

@@ -16,7 +16,10 @@ namespace CabSystem.Repositories
 
         public async Task<Rating?> GetRatingByRideIdAsync(int rideId)
         {
-            return await _context.Ratings.SingleOrDefaultAsync(r => r.RideId == rideId);
+            return await _context.Ratings
+                .Include(r => r.Ride)
+                .ThenInclude(ride => ride.User)
+                .FirstOrDefaultAsync(r => r.RideId == rideId);
         }
 
         public async Task<Rating> AddRatingAsync(Rating rating)
@@ -26,10 +29,14 @@ namespace CabSystem.Repositories
             return rating;
         }
 
-        public async Task<Rating?> UpdateRatingAsync(int rideId, int score, string? comments)
+        public async Task<Rating?> UpdateRatingAsync(int rideId, int userId, int score, string? comments)
         {
-            var rating = await GetRatingByRideIdAsync(rideId);
-            if (rating == null) return null;
+            var rating = await _context.Ratings
+                .Include(r => r.Ride)
+                .FirstOrDefaultAsync(r => r.RideId == rideId && r.Ride.UserId == userId);
+
+            if (rating == null)
+                return null;
 
             rating.Score = score;
             rating.Comments = comments;
@@ -37,10 +44,10 @@ namespace CabSystem.Repositories
             return rating;
         }
 
-        public async Task<List<Rating>> GetAllRatingsAsync()
+        /*public async Task<List<Rating>> GetAllRatingsAsync()
         {
             return await _context.Ratings.ToListAsync();
-        }
+        }*/
 
         public async Task<DriverAverageRatingDTO?> GetAverageRatingForDriverAsync(int driverId)
         {
@@ -60,6 +67,19 @@ namespace CabSystem.Repositories
             };
 
             return average;
+        }
+
+        public async Task<List<Rating>> GetRatingsByUserIdAsync(int userId)
+        {
+            return await _context.Ratings
+                .Include(r => r.Ride)
+                .Where(r => r.Ride.UserId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<bool> IsRideOwnedByUserAsync(int rideId, int userId)
+        {
+            return await _context.Rides.AnyAsync(r => r.RideId == rideId && r.UserId == userId);
         }
     }
 }

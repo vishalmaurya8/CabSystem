@@ -1,86 +1,76 @@
 ﻿using AutoMapper;
 using CabSystem.DTOs;
+using CabSystem.Exceptions;
 using CabSystem.Models;
 using CabSystem.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CabSystem.Exceptions; // ✅ For custom exceptions
+using System.Security.Claims;
 
-namespace CabSystem.Controllers
+[ApiController]
+[Route("api/[controller]")]
+[Authorize(Roles = "User")]
+public class RatingController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [Authorize]
-    public class RatingController : ControllerBase
+    private readonly IRatingRepository _ratingRepo;
+    private readonly IMapper _mapper;
+
+    public RatingController(IRatingRepository ratingRepo, IMapper mapper)
     {
-        private readonly IRatingRepository _ratingRepo;
-        private readonly IMapper _mapper;
+        _ratingRepo = ratingRepo;
+        _mapper = mapper;
+    }
 
-        public RatingController(IRatingRepository ratingRepo, IMapper mapper)
-        {
-            _ratingRepo = ratingRepo;
-            _mapper = mapper;
-        }
+    private int GetUserIdFromToken()
+    {
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (userIdClaim == null)
+            throw new UnauthorizedAccessException("User ID not found in token.");
+        return int.Parse(userIdClaim.Value);
+    }
 
-        [Authorize(Roles = "User")]
-        [HttpPost]
-        public async Task<IActionResult> AddRating([FromBody] CreateRatingDTO dto)
-        {
-            if (!ModelState.IsValid)
-                throw new BadRequestException("Invalid rating data");
+    [HttpPost]
+    public async Task<IActionResult> AddRating([FromBody] CreateRatingDTO dto)
+    {
+        if (!ModelState.IsValid) throw new BadRequestException("Invalid rating data");
 
-            var existing = await _ratingRepo.GetRatingByRideIdAsync(dto.RideId);
-            if (existing != null)
-                throw new ConflictException("Rating for this ride already exists.");
+        var userId = GetUserIdFromToken();
 
-            var rating = _mapper.Map<Rating>(dto);
-            var result = await _ratingRepo.AddRatingAsync(rating);
-            return Ok(_mapper.Map<RatingDTO>(result));
-        }
+        // 🔐 Make sure this ride belongs to the user
+        var isOwner = await _ratingRepo.IsRideOwnedByUserAsync(dto.RideId, userId);
+        if (!isOwner)
+            throw new UnauthorizedAccessException("You cannot rate a ride not booked by you.");
 
-        [Authorize(Roles = "User")]
-        [HttpPut("{rideId}")]
-        public async Task<IActionResult> UpdateRating(int rideId, [FromBody] UpdateRatingDto dto)
-        {
-            if (!ModelState.IsValid)
-                throw new BadRequestException("Invalid rating data");
+        // 🛑 Check for existing rating
+        var existing = await _ratingRepo.GetRatingByRideIdAsync(dto.RideId);
+        if (existing != null)
+            throw new ConflictException("Rating already exists for this ride.");
 
-            var updated = await _ratingRepo.UpdateRatingAsync(rideId, dto.Score, dto.Comments);
-            if (updated == null)
-                throw new NotFoundException("Rating not found for the given ride ID.");
+        var rating = _mapper.Map<Rating>(dto);
+        var result = await _ratingRepo.AddRatingAsync(rating);
 
-            return Ok(_mapper.Map<RatingDTO>(updated));
-        }
+        return Ok(_mapper.Map<RatingDTO>(result));
+    }
 
-        [Authorize(Roles = "User")]
-        [HttpGet("{rideId}")]
-        public async Task<IActionResult> GetRatingByRideId(int rideId)
-        {
-            var rating = await _ratingRepo.GetRatingByRideIdAsync(rideId);
-            if (rating == null)
-                throw new NotFoundException("Rating not found.");
+    [HttpPut("{rideId}")]
+    public async Task<IActionResult> UpdateRating(int rideId, [FromBody] UpdateRatingDto dto)
+    {
+        if (!ModelState.IsValid) throw new BadRequestException("Invalid update input");
 
-            return Ok(_mapper.Map<RatingDTO>(rating));
-        }
+        var userId = GetUserIdFromToken();
 
-        [Authorize(Roles = "User")]
-        [HttpGet]
-        public async Task<IActionResult> GetAllRatings()
-        {
-            var ratings = await _ratingRepo.GetAllRatingsAsync();
-            var ratingDtos = _mapper.Map<IEnumerable<RatingDTO>>(ratings);
-            return Ok(ratingDtos);
-        }
+        var updated = await _ratingRepo.UpdateRatingAsync(rideId, userId, dto.Score, dto.Comments);
+        if (updated == null)
+            throw new NotFoundException("You cannot update rating for this ride.");
 
-        [Authorize(Roles = "Driver")]
-        [HttpGet("driver/{driverId}/average")]
-        public async Task<IActionResult> GetAverageRatingForDriver(int driverId)
-        {
-            var result = await _ratingRepo.GetAverageRatingForDriverAsync(driverId);
-            if (result == null)
-                throw new NotFoundException($"No ratings found for driver with ID {driverId}.");
+        return Ok(_mapper.Map<RatingDTO>(updated));
+    }
 
-            return Ok(result);
-        }
+    [HttpGet]
+    public async Task<IActionResult> GetMyRatings()
+    {
+        var userId = GetUserIdFromToken();
+        var ratings = await _ratingRepo.GetRatingsByUserIdAsync(userId);
+        return Ok(_mapper.Map<IEnumerable<RatingDTO>>(ratings));
     }
 }

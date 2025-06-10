@@ -5,6 +5,7 @@ using CabSystem.Models;
 using CabSystem.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CabSystem.Controllers
 {
@@ -22,33 +23,46 @@ namespace CabSystem.Controllers
             _mapper = mapper;
         }
 
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException("User ID not found in token.");
+            return int.Parse(userIdClaim.Value);
+        }
+
+
         [Authorize(Roles = "User")]
         [HttpPost]
         public async Task<IActionResult> MakePayment([FromBody] CreatePaymentDTO dto)
         {
             if (!ModelState.IsValid)
-                throw new BadRequestException("Invalid payment data.");
-
-            var existing = await _paymentRepo.GetPaymentByRideIdAsync(dto.RideId);
-            if (existing != null)
-                throw new ConflictException("Payment already exists for this ride.");
+                throw new BadRequestException("Invalid payment data");
 
             var payment = _mapper.Map<Payment>(dto);
             var result = await _paymentRepo.InsertPaymentAsync(payment);
 
-            return Ok(_mapper.Map<PaymentDTO>(result));
+            var response = _mapper.Map<PaymentDTO>(result);
+            return Ok(response);
         }
+
 
         [Authorize(Roles = "User")]
-        [HttpGet]
-        public async Task<IActionResult> GetAllPayments()
+        [HttpGet("my-payments")]
+        public async Task<IActionResult> GetMyPayments()
         {
-            var payments = await _paymentRepo.GetAllPaymentsAsync();
-            if (payments == null || !payments.Any())
-                throw new NotFoundException("No payments found.");
+            var userId = GetUserIdFromToken();
 
-            var paymentDtos = _mapper.Map<IEnumerable<PaymentDTO>>(payments);
-            return Ok(paymentDtos);
+            var payments = await _paymentRepo.GetPaymentsByUserIdAsync(userId);
+
+            if (payments == null || !payments.Any())
+                throw new NotFoundException("No payments found for your account.");
+
+            var result = _mapper.Map<List<PaymentDTO>>(payments);
+            return Ok(result);
         }
+
+
+
     }
 }

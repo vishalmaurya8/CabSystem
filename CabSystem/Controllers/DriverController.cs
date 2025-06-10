@@ -25,14 +25,6 @@ namespace CabSystem.Controllers
             _mapper = mapper;
         }
 
-        private int GetUserIdFromToken()
-        {
-            var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(id))
-                throw new BadRequestException("User ID not found in token.");
-            return int.Parse(id);
-        }
-
         // GET /api/driver/me
         [HttpGet("me")]
         public async Task<IActionResult> GetProfile()
@@ -68,6 +60,42 @@ namespace CabSystem.Controllers
             var userId = GetUserIdFromToken();
             var stats = await _driverRepo.GetDriverStatsAsync(userId);
             return Ok(stats);
+        }
+
+
+        //Review this code later on
+        [HttpGet("available-rides")]
+        public async Task<IActionResult> GetAvailableRides()
+        {
+            var driverId = GetUserIdFromToken();
+            var rides = await _rideRepo.GetRequestedRidesByDriverIdAsync(driverId);
+
+
+            if (rides == null || !rides.Any())
+                throw new NotFoundException("No rides available for assignment.");
+
+            var result = _mapper.Map<List<RequestedRideDTO>>(rides);
+            return Ok(result);
+        }
+
+        [HttpPost("accept-ride")]
+        public async Task<IActionResult> AcceptRide([FromBody] AcceptRideDTO dto)
+        {
+            var driverId = GetUserIdFromToken(); // extract from JWT claims
+            var updatedRide = await _rideRepo.AcceptRideAsync(dto.RideId, driverId);
+
+            if (updatedRide == null)
+                throw new NotFoundException("Ride not available or already assigned.");
+
+            return Ok(new { message = "Ride accepted successfully", RideId = updatedRide.RideId });
+        }
+
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException("User ID not found in token.");
+            return int.Parse(userIdClaim.Value);
         }
     }
 }

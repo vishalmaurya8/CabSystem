@@ -44,5 +44,39 @@ namespace CabSystem.Repositories
             await _context.SaveChangesAsync();
             return ride;
         }
+
+        // 🆕 Updated to work with non-nullable DriverId
+        public async Task<List<Ride>> GetRequestedRidesByDriverIdAsync(int driverId)
+        {
+            return await _context.Rides
+                .Include(r => r.User)
+                .Where(r => r.Status == "Requested" && r.DriverId == driverId)
+                .ToListAsync();
+        }
+
+        public async Task<Ride?> AcceptRideAsync(int rideId, int driverId)
+        {
+            var ride = await _context.Rides.FindAsync(rideId);
+            if (ride == null || ride.Status != "Requested")
+                return null;
+
+            // Already assigned, just update status
+            if (ride.DriverId != driverId)
+                return null; // Optional: prevent unauthorized acceptance
+
+            ride.Status = "Accepted";
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new Exception("Failed to assign driver: " + ex.InnerException?.Message ?? ex.Message);
+            }
+
+            return ride;
+        }
     }
 }
+
