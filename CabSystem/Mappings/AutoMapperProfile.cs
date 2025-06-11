@@ -18,7 +18,10 @@ namespace CabSystem.Mappings
             .ForMember(dest => dest.DropoffLocation, opt => opt.MapFrom(src => src.DropoffLocation))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
             .ForMember(dest => dest.Fare, opt => opt.MapFrom(src => src.Fare));
-            CreateMap<CreateRideDTO, Ride>().ReverseMap();
+            CreateMap<CreateRideDTO, Ride>()
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.Fare, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore());
             CreateMap<Ride, CompleteRideResponseDTO>()
                 .ForMember(dest => dest.Message, opt => opt.MapFrom(src => "Thank you for riding with us!"));
             CreateMap<Rating, RatingDTO>().ReverseMap();

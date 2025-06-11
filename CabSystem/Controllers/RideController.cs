@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
 using CabSystem.DTOs;
+using CabSystem.Exceptions; // ✅ Use your existing custom exception namespace
 using CabSystem.Models;
 using CabSystem.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using CabSystem.Exceptions; // ✅ Use your existing custom exception namespace
+using System.Security.Claims;
 
 namespace CabSystem.Controllers
 {
@@ -47,18 +48,34 @@ namespace CabSystem.Controllers
             if (!ModelState.IsValid)
                 throw new BadRequestException("Invalid ride data");
 
+            var userId = GetUserIdFromToken(); // 🔐 get from JWT token
+
             var ride = _mapper.Map<Ride>(dto);
+
             if (ride == null)
                 throw new BadRequestException("Failed to create ride from input");
 
-            // ✅ Fare calculation logic
-            var fare = fareService.CalculateFare(dto.PickupLocation, dto.DropoffLocation);
-            ride.Fare = fare;
+            // 🔐 Assign user ID securely
+            ride.UserId = userId;
 
+            // 🧠 Auto-calculate fare (lookup dummy data or fallback)
+            ride.Fare = fareService.CalculateFare(dto.PickupLocation, dto.DropoffLocation);
+
+            // ✅ Ride is set to "Requested" inside repository
             var result = await _rideRepository.BookRideAsync(ride);
+
             var rideDto = _mapper.Map<RideDTO>(result);
             return Ok(rideDto);
         }
+
+        private int GetUserIdFromToken()
+        {
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+                throw new UnauthorizedAccessException("User ID not found in token.");
+            return int.Parse(userIdClaim.Value);
+        }
+
 
 
         // 🚗 DRIVER-ONLY: Complete a ride
