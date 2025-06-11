@@ -47,7 +47,7 @@ namespace CAB.Controllers
                 Name = dto.Name,
                 Email = dto.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Phone = Convert.ToInt32(dto.Phone),
+                Phone = Convert.ToInt64(dto.Phone),
                 Role = dto.Role,
                 CreatedAt = DateTime.UtcNow
             };
@@ -84,11 +84,15 @@ namespace CAB.Controllers
         public IActionResult Login([FromBody] LoginDTO dto)
         {
             var user = _dbContext.Users.SingleOrDefault(u => u.Email == dto.Email);
-            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.PasswordHash, user.PasswordHash))
+            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 throw new UnauthorizedAccessException("Invalid credentials");
 
             var token = _jwtTokenService.GenerateJwtToken(user.Email, user.Role, user.UserId);
-            return Ok(new { token });
+            return Ok(new
+            {
+                message = "Login successful",
+                token = token
+            });
         }
 
     }

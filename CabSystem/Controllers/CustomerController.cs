@@ -20,7 +20,6 @@ namespace CabSystem.Controllers
         public CustomerController(ICustomerRepository customerRepository, IMapper mapper)
         {
             this.customerRepository = customerRepository;
-            //_userRepo = userRepo;
             _mapper = mapper;
         }
 

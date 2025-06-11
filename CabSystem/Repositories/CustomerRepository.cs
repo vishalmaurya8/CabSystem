@@ -25,7 +25,7 @@ namespace CabSystem.Repositories
             return await dbcontext.Rides
                 .Where(r => r.UserId == userId)
                 .Include(r => r.Driver)
-                    .ThenInclude(d => d.User) // ✅ This is the fix: eager load Driver's User
+                    .ThenInclude(d => d.User)
                 .ToListAsync();
         }
 
