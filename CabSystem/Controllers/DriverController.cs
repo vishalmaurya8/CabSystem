@@ -67,13 +67,10 @@ namespace CabSystem.Controllers
         [HttpGet("available-rides")]
         public async Task<IActionResult> GetAvailableRides()
         {
-            var driverId = GetUserIdFromToken();
-            var rides = await _rideRepo.GetRequestedRidesByDriverIdAsync(driverId);
-
+            var rides = await _rideRepo.GetUnassignedRequestedRidesAsync(); // 👈 changed
 
             if (rides == null || !rides.Any())
-                //throw new NotFoundException("No rides available for assignment.");
-                return Ok(new List<RequestedRideDTO>());
+                throw new NotFoundException("No rides available for assignment.");
 
             var result = _mapper.Map<List<RequestedRideDTO>>(rides);
             return Ok(result);

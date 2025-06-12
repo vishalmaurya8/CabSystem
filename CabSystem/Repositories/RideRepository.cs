@@ -93,6 +93,13 @@ namespace CabSystem.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<Ride>> GetUnassignedRequestedRidesAsync()
+        {
+            return await _context.Rides
+                .Where(r => r.Status == "Requested")
+                .Include(r => r.User)
+                .ToListAsync();
+        }
     }
 }
 

@@ -11,14 +11,12 @@ namespace CabSystem.Repositories
         Task<Ride> BookRideAsync(Ride ride);
         Task<Ride?> CompleteRideAsync(int rideId);
         Task<Ride?> GetRideByIdAsync(int rideId);
-
         Task UpdateRideAsync(Ride ride);
-
-
-        // 🆕 Return all rides with 'Requested' status for the current driver
         Task<List<Ride>> GetRequestedRidesByDriverIdAsync(int driverId);
-
         Task<Ride?> AcceptRideAsync(int rideId, int driverId);
+
+
+        Task<List<Ride>> GetUnassignedRequestedRidesAsync(); // new method
 
     }
 }
