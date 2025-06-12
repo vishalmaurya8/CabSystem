@@ -9,6 +9,16 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+/*
+Creates a WebApplicationBuilder object.
+Sets up the host, configuration, logging, and dependency injection container.
+that's how we use this builder object:
+            Register services (builder.Services)
+            Configure app settings (builder.Configuration)
+            Access environment info (builder.Environment)
+            Build the app (builder.Build())
+ */
+
 
 // Add JWT authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

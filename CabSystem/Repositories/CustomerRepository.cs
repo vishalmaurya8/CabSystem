@@ -1,4 +1,5 @@
 ﻿using CabSystem.Data;
+using CabSystem.DTOs;
 using CabSystem.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,6 +34,28 @@ namespace CabSystem.Repositories
         {
             return await dbcontext.Users
                 .FirstOrDefaultAsync(u => u.UserId == userId);
+        }
+
+        public async Task<User?> UpdateCustomerProfileAsync(int userId, UpdateCustomerProfileDTO dto)
+        {
+            var user = await dbcontext.Users.FindAsync(userId);
+            if (user == null)
+                return null;
+
+            user.Name = dto.Name;
+            user.Email = dto.Email;
+            user.Phone = dto.Phone;
+            // user.Address = dto.Address;
+
+            try
+            {
+                await dbcontext.SaveChangesAsync();
+                return user;
+            }
+            catch (DbUpdateException ex)
+            {
+                throw new Exception("Failed to update profile: " + ex.InnerException?.Message ?? ex.Message);
+            }
         }
     }
 }

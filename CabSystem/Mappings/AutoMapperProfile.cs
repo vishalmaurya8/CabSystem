@@ -11,6 +11,22 @@ namespace CabSystem.Mappings
             // User <-> DTO mappings (if needed)
             // CreateMap<User, UserDto>().ReverseMap();
 
+            CreateMap<User, UpdateCustomerProfileDTO>().ReverseMap();
+            CreateMap<RegistrationDTO, User>()
+             .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => Convert.ToInt64(src.Phone)))
+             .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+             .ForMember(dest => dest.CreatedAt, opt => opt.Ignore());
+
+            CreateMap<User, UserProfileDTO>()
+            .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone.ToString()));
+
+            CreateMap<RegistrationDTO, Driver>()
+            .ForMember(dest => dest.LicenseNo, opt => opt.MapFrom(src => src.LicenseNumber))
+            .ForMember(dest => dest.VehicleDetails, opt => opt.MapFrom(src => src.VehicleDetails))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.UserId, opt => opt.Ignore()); // We'll set this manually
+
+
             // Ride <-> DTO mappings
             CreateMap<Ride, RideDTO>()
             .ForMember(dest => dest.DriverNames, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.User.Name : null))
@@ -47,6 +63,8 @@ namespace CabSystem.Mappings
             CreateMap<Payment, PaymentDTO>()
                 .ForMember(dest => dest.PickupLocation, opt => opt.MapFrom(src => src.Ride.PickupLocation))
                 .ForMember(dest => dest.DropoffLocation, opt => opt.MapFrom(src => src.Ride.DropoffLocation));
+
+
 
         }
     }

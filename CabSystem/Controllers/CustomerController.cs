@@ -68,5 +68,25 @@ namespace CabSystem.Controllers
             var dto = _mapper.Map<IEnumerable<UserRatingDTO>>(ratings);
             return Ok(dto);
         }
+
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateCustomerProfileDTO dto)
+        {
+            if (!ModelState.IsValid)
+                throw new BadRequestException("Invalid input data.");
+
+            var userId = GetUserIdFromToken();
+
+            var updatedUser = await customerRepository.UpdateCustomerProfileAsync(userId, dto);
+
+            if (updatedUser == null)
+                throw new NotFoundException("User not found.");
+
+            return Ok(new
+            {
+                Message = "Profile updated successfully.",
+                Updated = _mapper.Map<UpdateCustomerProfileDTO>(updatedUser)
+            });
+        }
     }
 }

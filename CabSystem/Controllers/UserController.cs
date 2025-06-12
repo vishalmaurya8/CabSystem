@@ -1,10 +1,8 @@
-﻿using CabSystem.Data;
+﻿using AutoMapper;
+using CabSystem.Data;
 using CabSystem.DTOs;
 using CabSystem.Exceptions;
 using CabSystem.Models;
-//using CAB.DTOs;
-//using CAB.Models;
-//using CAB.Models.Domains;
 using CabSystem.Repositories; // Assuming IJwtTokenServices is here
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,11 +16,13 @@ namespace CAB.Controllers
     {
         private readonly CabSystemContext _dbContext;
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly IMapper mapper;
 
-        public UserController(CabSystemContext dbContext, IJwtTokenService jwtTokenService)
+        public UserController(CabSystemContext dbContext, IJwtTokenService jwtTokenService, IMapper mapper)
         {
             _dbContext = dbContext;
             _jwtTokenService = jwtTokenService;
+            this.mapper = mapper;
         }
 
         [HttpPost("register")]
@@ -34,28 +34,19 @@ namespace CAB.Controllers
             if (dto.Role != "User" && dto.Role != "Driver")
                 throw new BadRequestException("Invalid role. Must be 'User' or 'Driver'.");
 
-            // Check for existing email or phone
             if (await _dbContext.Users.AnyAsync(u => u.Email == dto.Email))
                 throw new BadRequestException("Email already in use.");
 
-            if (await _dbContext.Users.AnyAsync(u => u.Phone == dto.Phone))
+            if (await _dbContext.Users.AnyAsync(u => u.Phone == Convert.ToInt64(dto.Phone)))
                 return BadRequest("Phone already in use.");
 
-            // Create user
-            var user = new User
-            {
-                Name = dto.Name,
-                Email = dto.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-                Phone = Convert.ToInt64(dto.Phone),
-                Role = dto.Role,
-                CreatedAt = DateTime.UtcNow
-            };
+            var user = mapper.Map<User>(dto);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+            user.CreatedAt = DateTime.UtcNow;
 
             _dbContext.Users.Add(user);
-            await _dbContext.SaveChangesAsync(); // UserId is generated here
+            await _dbContext.SaveChangesAsync();
 
-            // If Driver, insert into Drivers table
             if (dto.Role == "Driver")
             {
                 if (string.IsNullOrEmpty(dto.LicenseNumber) ||
@@ -65,13 +56,16 @@ namespace CAB.Controllers
                     return BadRequest("Driver-specific fields are required.");
                 }
 
-                var driver = new Driver
-                {
-                    UserId = user.UserId,
-                    LicenseNo = dto.LicenseNumber,
-                    VehicleDetails = dto.VehicleDetails,
-                    Status = dto.Status
-                };
+                //var driver = new Driver
+                //{
+                //    UserId = user.UserId,
+                //    LicenseNo = dto.LicenseNumber,
+                //    VehicleDetails = dto.VehicleDetails,
+                //    Status = dto.Status
+                //};
+                var driver = mapper.Map<Driver>(dto);
+                driver.UserId = user.UserId; // Set manually after user is saved
+
 
                 _dbContext.Drivers.Add(driver);
                 await _dbContext.SaveChangesAsync();
@@ -79,6 +73,62 @@ namespace CAB.Controllers
 
             return Ok("Registration successful.");
         }
+
+        //[HttpPost("register")]
+        //public async Task<IActionResult> Register([FromBody] RegistrationDTO dto)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return BadRequest(ModelState);
+
+        //    if (dto.Role != "User" && dto.Role != "Driver")
+        //        throw new BadRequestException("Invalid role. Must be 'User' or 'Driver'.");
+
+        //    // Check for existing email or phone
+        //    if (await _dbContext.Users.AnyAsync(u => u.Email == dto.Email))
+        //        throw new BadRequestException("Email already in use.");
+
+        //    if (await _dbContext.Users.AnyAsync(u => u.Phone == dto.Phone))
+        //        return BadRequest("Phone already in use.");
+
+
+        //    // Create user
+        //    var user = new User
+        //    {
+        //        Name = dto.Name,
+        //        Email = dto.Email,
+        //        PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+        //        Phone = Convert.ToInt64(dto.Phone),
+        //        Role = dto.Role,
+        //        CreatedAt = DateTime.UtcNow
+        //    };
+
+        //    _dbContext.Users.Add(user);
+        //    await _dbContext.SaveChangesAsync(); // UserId is generated here
+
+        //    // If Driver, insert into Drivers table
+        //    if (dto.Role == "Driver")
+        //    {
+        //        if (string.IsNullOrEmpty(dto.LicenseNumber) ||
+        //            string.IsNullOrEmpty(dto.VehicleDetails) ||
+        //            string.IsNullOrEmpty(dto.Status))
+        //        {
+        //            return BadRequest("Driver-specific fields are required.");
+        //        }
+
+        //        var driver = new Driver
+        //        {
+        //            UserId = user.UserId,
+        //            LicenseNo = dto.LicenseNumber,
+        //            VehicleDetails = dto.VehicleDetails,
+        //            Status = dto.Status
+        //        };
+
+        //        _dbContext.Drivers.Add(driver);
+        //        await _dbContext.SaveChangesAsync();
+        //    }
+
+        //    return Ok("Registration successful.");
+        //}
 
         [HttpPost("login")]
         public IActionResult Login([FromBody] LoginDTO dto)
