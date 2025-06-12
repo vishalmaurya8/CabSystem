@@ -16,11 +16,13 @@ namespace CabSystem.Controllers
     {
         private readonly IPaymentRepository _paymentRepo;
         private readonly IMapper _mapper;
+        private readonly IRideRepository rideRepository;
 
-        public PaymentController(IPaymentRepository paymentRepo, IMapper mapper)
+        public PaymentController(IPaymentRepository paymentRepo, IMapper mapper, IRideRepository rideRepository)
         {
             _paymentRepo = paymentRepo;
             _mapper = mapper;
+            this.rideRepository = rideRepository;
         }
 
         private int GetUserIdFromToken()
@@ -39,12 +41,28 @@ namespace CabSystem.Controllers
             if (!ModelState.IsValid)
                 throw new BadRequestException("Invalid payment data");
 
-            var payment = _mapper.Map<Payment>(dto);
-            var result = await _paymentRepo.InsertPaymentAsync(payment);
+            var ride = await rideRepository.GetRideByIdAsync(dto.RideId);
+            if (ride == null)
+                throw new NotFoundException($"Ride with ID {dto.RideId} does not exist.");
 
+            var userId = GetUserIdFromToken();
+            if (ride.UserId != userId)
+                throw new UnauthorizedAccessException("You cannot pay for another user's ride.");
+
+            // ✅ Update Ride Status
+            ride.Status = "Completed";
+
+            // 🔁 Save status change
+            await rideRepository.UpdateRideAsync(ride); // You’ll implement this method below
+
+            var payment = _mapper.Map<Payment>(dto);
+            payment.Timestamp = DateTime.UtcNow;
+
+            var result = await _paymentRepo.InsertPaymentAsync(payment);
             var response = _mapper.Map<PaymentDTO>(result);
             return Ok(response);
         }
+
 
 
         [Authorize(Roles = "User")]

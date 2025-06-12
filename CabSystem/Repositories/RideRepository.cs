@@ -77,6 +77,22 @@ namespace CabSystem.Repositories
 
             return ride;
         }
+
+        public async Task<Ride?> GetRideByIdAsync(int rideId)
+        {
+            return await _context.Rides
+                .Include(r => r.User)
+                .Include(r => r.Driver)
+                .FirstOrDefaultAsync(r => r.RideId == rideId);
+        }
+
+
+        public async Task UpdateRideAsync(Ride ride)
+        {
+            _context.Rides.Update(ride);
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
 

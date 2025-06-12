@@ -72,7 +72,8 @@ namespace CabSystem.Controllers
 
 
             if (rides == null || !rides.Any())
-                throw new NotFoundException("No rides available for assignment.");
+                //throw new NotFoundException("No rides available for assignment.");
+                return Ok(new List<RequestedRideDTO>());
 
             var result = _mapper.Map<List<RequestedRideDTO>>(rides);
             return Ok(result);
