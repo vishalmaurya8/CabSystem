@@ -67,7 +67,13 @@ namespace CabSystem.Controllers
         [HttpGet("available-rides")]
         public async Task<IActionResult> GetAvailableRides()
         {
-            var rides = await _rideRepo.GetUnassignedRequestedRidesAsync(); // 👈 changed
+            var userId = GetUserIdFromToken();
+
+            var driverId = await _driverRepo.GetDriverIdByUserIdAsync(userId);
+            if (driverId == null)
+                throw new NotFoundException("Driver profile not found");
+
+            var rides = await _rideRepo.GetRequestedRidesByDriverIdAsync(driverId.Value);
 
             if (rides == null || !rides.Any())
                 throw new NotFoundException("No rides available for assignment.");
@@ -90,7 +96,8 @@ namespace CabSystem.Controllers
 
         private int GetUserIdFromToken()
         {
-            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            //var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 throw new UnauthorizedAccessException("User ID not found in token.");
             return int.Parse(userIdClaim.Value);

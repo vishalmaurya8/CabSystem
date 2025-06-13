@@ -10,5 +10,6 @@ namespace CabSystem.Repositories
         Task<DriverStatsDTO> GetDriverStatsAsync(int userId);
         Task<List<Ride>> GetAssignedRidesForDriverAsync(int driverId);
         Task<List<Ride>> GetAssignedRidesForDriverByStatusAsync(int driverId, string status);
+        Task<int?> GetDriverIdByUserIdAsync(int userId);
     }
 }

@@ -87,5 +87,11 @@ namespace CabSystem.Repositories
                 .Include(r => r.Payment)
                 .ToListAsync();
         }
+
+        public async Task<int?> GetDriverIdByUserIdAsync(int userId)
+        {
+            var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.UserId == userId);
+            return driver?.DriverId;
+        }
     }
 }
