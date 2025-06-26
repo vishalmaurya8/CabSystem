@@ -93,5 +93,29 @@ namespace CabSystem.Repositories
             var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.UserId == userId);
             return driver?.DriverId;
         }
+
+
+        public async Task UpdateDriverProfileAsync(int userId, UpdateDriverProfileDTO dto)
+        {
+            var driver = await _context.Drivers
+                .Include(d => d.User)
+                .FirstOrDefaultAsync(d => d.UserId == userId);
+
+            if (driver == null)
+                throw new NotFoundException("Driver not found.");
+
+            // Update User fields
+            driver.User.Email = dto.Email;
+            if (long.TryParse(dto.Phone, out var phone))
+                driver.User.Phone = phone;
+            else
+                throw new BadRequestException("Invalid phone number format.");
+
+            // Update Driver fields
+            driver.LicenseNo = dto.LicenseNo;
+            driver.VehicleDetails = dto.VehicleDetails;
+
+            await _context.SaveChangesAsync();
+        }
     }
 }

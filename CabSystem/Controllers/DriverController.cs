@@ -62,8 +62,23 @@ namespace CabSystem.Controllers
             return Ok(stats);
         }
 
+        [Authorize(Roles = "Driver")]
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateDriverProfileDTO dto)
+        {
+            if (!ModelState.IsValid)
+                throw new BadRequestException("Invalid profile data.");
 
-        
+            var userId = GetUserIdFromToken(); // Get userId from JWT
+            await _driverRepo.UpdateDriverProfileAsync(userId, dto);
+            return Ok(new
+            {
+                message = "Profile updated successfully."
+            });
+        }
+
+
+
         /*[HttpGet("available-rides")]
         public async Task<IActionResult> GetAvailableRides()
         {
