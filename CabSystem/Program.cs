@@ -41,7 +41,6 @@ builder.Services.AddAuthorization();
 
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen(options =>
@@ -82,6 +81,16 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<CabSystemContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngularApp",
+    policy => policy.WithOrigins("http://localhost:4200")
+    .AllowAnyHeader()
+    .AllowAnyMethod());
+});
+
+
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IDriverRepository, DriverRepository>();
@@ -94,6 +103,11 @@ builder.Services.AddAutoMapper(typeof(AutoMapperProfiles));
 
 
 var app = builder.Build();
+
+
+// Configure the HTTP request pipeline.
+app.UseCors("AllowAngularApp");
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

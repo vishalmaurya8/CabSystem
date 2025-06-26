@@ -11,7 +11,7 @@ namespace CabSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // 🔐 Require authentication globally in this controller
+    [Authorize] 
     public class RideController : ControllerBase
     {
         private readonly IRideRepository _rideRepository;
@@ -27,7 +27,7 @@ namespace CabSystem.Controllers
             this.fareService = fareService;
         }
 
-        // 🧍 USER-ONLY: Get rides by userId
+        //USER-ONLY: Get rides by userId
         [Authorize(Roles = "User")]
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetRidesByUserId(int userId)
@@ -40,7 +40,7 @@ namespace CabSystem.Controllers
             return Ok(rideDtos);
         }
 
-        // 🧍 USER-ONLY: Book a ride
+        //USER-ONLY: Book a ride
         [Authorize(Roles = "User")]
         [HttpPost("book")]
         public async Task<IActionResult> BookRide([FromBody] CreateRideDTO dto)
@@ -55,13 +55,13 @@ namespace CabSystem.Controllers
             if (ride == null)
                 throw new BadRequestException("Failed to create ride from input");
 
-            // 🔐 Assign user ID securely
+            //Assign user ID securely
             ride.UserId = userId;
 
-            // 🧠 Auto-calculate fare (lookup dummy data or fallback)
+            //Auto-calculate fare (lookup dummy data or fallback)
             ride.Fare = fareService.CalculateFare(dto.PickupLocation, dto.DropoffLocation);
 
-            // ✅ Ride is set to "Requested" inside repository
+            //Ride is set to "Requested" inside repository
             var result = await _rideRepository.BookRideAsync(ride);
 
             var rideDto = _mapper.Map<RideDTO>(result);
@@ -78,8 +78,8 @@ namespace CabSystem.Controllers
 
 
 
-        // 🚗 DRIVER-ONLY: Complete a ride
-        [Authorize(Roles = "Driver")]
+        
+/*        [Authorize(Roles = "Driver")]
         [HttpPost("complete/{rideId}")]
         public async Task<IActionResult> CompleteRide(int rideId)
         {
@@ -104,9 +104,6 @@ namespace CabSystem.Controllers
                 Ride = _mapper.Map<CompleteRideResponseDTO>(ride),
                 Payment = _mapper.Map<PaymentDTO>(insertedPayment)
             });
-        }
-
-
-
+        }*/
     }
 }

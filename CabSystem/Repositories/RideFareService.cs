@@ -18,18 +18,18 @@ namespace CabSystem.Services
             var key = $"{start.ToLower()}-{end.ToLower()}";
 
             var distances = new Dictionary<string, double>
-    {
-        { "delhi-noida", 15 },
-        { "chennai-kerala", 685 },
-        { "mumbai-pune", 150 },
-        { "bangalore-hyderabad", 570 },
-        { "kolkata-howrah", 10 },
-        { "delhi-delhi", 2 },
-        { "lucknow-kanpur", 80 },
-        { "indore-bhopal", 190 },
-        { "nagpur-mumbai", 820 },
-        { "ahmedabad-surat", 265 }
-    };
+                {
+                    { "delhi-noida", 15 },
+                    { "chennai-kerala", 685 },
+                    { "mumbai-pune", 150 },
+                    { "bangalore-hyderabad", 570 },
+                    { "kolkata-howrah", 10 },
+                    { "delhi-delhi", 2 },
+                    { "lucknow-kanpur", 80 },
+                    { "indore-bhopal", 190 },
+                    { "nagpur-mumbai", 820 },
+                    { "ahmedabad-surat", 265 }
+                };
 
             return distances.TryGetValue(key, out var dist) ? dist : 10; // default 10km
         }

@@ -15,7 +15,6 @@ namespace CabSystem.Repositories
         Task<List<Ride>> GetRequestedRidesByDriverIdAsync(int driverId);
         Task<Ride?> AcceptRideAsync(int rideId, int driverId);
 
-
         Task<List<Ride>> GetUnassignedRequestedRidesAsync(); // new method
 
     }

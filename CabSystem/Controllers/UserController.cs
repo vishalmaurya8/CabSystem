@@ -3,7 +3,7 @@ using CabSystem.Data;
 using CabSystem.DTOs;
 using CabSystem.Exceptions;
 using CabSystem.Models;
-using CabSystem.Repositories; // Assuming IJwtTokenServices is here
+using CabSystem.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -56,13 +56,6 @@ namespace CAB.Controllers
                     return BadRequest("Driver-specific fields are required.");
                 }
 
-                //var driver = new Driver
-                //{
-                //    UserId = user.UserId,
-                //    LicenseNo = dto.LicenseNumber,
-                //    VehicleDetails = dto.VehicleDetails,
-                //    Status = dto.Status
-                //};
                 var driver = mapper.Map<Driver>(dto);
                 driver.UserId = user.UserId; // Set manually after user is saved
 

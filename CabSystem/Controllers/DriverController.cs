@@ -63,8 +63,8 @@ namespace CabSystem.Controllers
         }
 
 
-        //Review this code later on
-        [HttpGet("available-rides")]
+        
+        /*[HttpGet("available-rides")]
         public async Task<IActionResult> GetAvailableRides()
         {
             var userId = GetUserIdFromToken();
@@ -80,9 +80,9 @@ namespace CabSystem.Controllers
 
             var result = _mapper.Map<List<RequestedRideDTO>>(rides);
             return Ok(result);
-        }
+        }*/
 
-        [HttpPost("accept-ride")]
+        /*[HttpPost("accept-ride")]
         public async Task<IActionResult> AcceptRide([FromBody] AcceptRideDTO dto)
         {
             var driverId = GetUserIdFromToken(); // extract from JWT claims
@@ -92,12 +92,11 @@ namespace CabSystem.Controllers
                 throw new NotFoundException("Ride not available or already assigned.");
 
             return Ok(new { message = "Ride accepted successfully", RideId = updatedRide.RideId });
-        }
+        }*/
 
         private int GetUserIdFromToken()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            //var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
             if (userIdClaim == null)
                 throw new UnauthorizedAccessException("User ID not found in token.");
             return int.Parse(userIdClaim.Value);

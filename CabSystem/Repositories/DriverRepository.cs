@@ -43,8 +43,8 @@ namespace CabSystem.Repositories
         public async Task<DriverStatsDTO> GetDriverStatsAsync(int userId)
         {
             var driver = await _context.Drivers
-                .Include(d => d.Rides) // ✅ eager load related rides
-                .ThenInclude(r => r.Rating) // ✅ if you're including ratings
+                .Include(d => d.Rides) //eager load related rides
+                .ThenInclude(r => r.Rating) //if you're including ratings
                 .FirstOrDefaultAsync(d => d.UserId == userId);
 
             if (driver == null)

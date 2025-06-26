@@ -45,7 +45,6 @@ namespace CabSystem.Repositories
             return ride;
         }
 
-        // 🆕 Updated to work with non-nullable DriverId
         public async Task<List<Ride>> GetRequestedRidesByDriverIdAsync(int driverId)
         {
             return await _context.Rides
@@ -60,9 +59,9 @@ namespace CabSystem.Repositories
             if (ride == null || ride.Status != "Requested")
                 return null;
 
-            // Already assigned, just update status
+            // Already assigned, update status
             if (ride.DriverId != driverId)
-                return null; // Optional: prevent unauthorized acceptance
+                return null; 
 
             ride.Status = "Accepted";
 
