@@ -45,27 +45,20 @@ namespace CabSystem.Controllers
         [HttpPost("book")]
         public async Task<IActionResult> BookRide([FromBody] CreateRideDTO dto)
         {
-            if (!ModelState.IsValid)
-                throw new BadRequestException("Invalid ride data");
+            var userId = GetUserIdFromToken();
 
-            var userId = GetUserIdFromToken(); // 🔐 get from JWT token
+            // 🛑 Check if there's any unpaid ride
+            var unpaidRide = await _rideRepository.GetLatestUnpaidRideByUserIdAsync(userId);
+            if (unpaidRide != null)
+                throw new BadRequestException("You already have an unpaid ride. Please complete payment first.");
 
             var ride = _mapper.Map<Ride>(dto);
-
-            if (ride == null)
-                throw new BadRequestException("Failed to create ride from input");
-
-            //Assign user ID securely
             ride.UserId = userId;
-
-            //Auto-calculate fare (lookup dummy data or fallback)
+            ride.Status = "Requested";
             ride.Fare = fareService.CalculateFare(dto.PickupLocation, dto.DropoffLocation);
 
-            //Ride is set to "Requested" inside repository
             var result = await _rideRepository.BookRideAsync(ride);
-
-            var rideDto = _mapper.Map<RideDTO>(result);
-            return Ok(rideDto);
+            return Ok(_mapper.Map<RideDTO>(result));
         }
 
         private int GetUserIdFromToken()

@@ -1,4 +1,5 @@
 ﻿using CabSystem.Data;
+using CabSystem.Exceptions;
 using CabSystem.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +43,32 @@ namespace CabSystem.Repositories
                 .ThenInclude(r => r.User)
                 .Where(p => p.Ride.UserId == userId)
                 .ToListAsync();
+        }
+
+        public async Task<Payment> InsertPaymentForLatestUnpaidRideAsync(int userId, string method)
+        {
+            var ride = await _context.Rides
+                .Include(r => r.Payment)
+                .Where(r => r.UserId == userId && (r.Payment == null || r.Payment.Status != "Paid"))
+                .OrderByDescending(r => r.RideId)
+                .FirstOrDefaultAsync();
+
+            if (ride == null)
+                throw new NotFoundException("No unpaid ride found.");
+
+            var payment = new Payment
+            {
+                RideId = ride.RideId,
+                Amount = ride.Fare,
+                Method = method,
+                Status = "Paid",
+                Timestamp = DateTime.UtcNow
+            };
+
+            _context.Payments.Add(payment);
+            await _context.SaveChangesAsync();
+
+            return payment;
         }
     }
 }

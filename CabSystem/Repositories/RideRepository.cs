@@ -99,6 +99,17 @@ namespace CabSystem.Repositories
                 .Include(r => r.User)
                 .ToListAsync();
         }
+
+        public async Task<Ride?> GetLatestUnpaidRideByUserIdAsync(int userId)
+        {
+            return await _context.Rides
+                .Include(r => r.Payment)
+                .Where(r => r.UserId == userId &&
+                            r.Status != "Completed" &&
+                            (r.Payment == null || r.Payment.Status != "Paid"))
+                .OrderByDescending(r => r.RideId) // Assuming latest ride has highest ID
+                .FirstOrDefaultAsync();
+        }
     }
 }
 

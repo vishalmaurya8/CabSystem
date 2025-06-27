@@ -41,25 +41,31 @@ namespace CabSystem.Controllers
             if (!ModelState.IsValid)
                 throw new BadRequestException("Invalid payment data");
 
-            var ride = await rideRepository.GetRideByIdAsync(dto.RideId);
-            if (ride == null)
-                throw new NotFoundException($"Ride with ID {dto.RideId} does not exist.");
-
             var userId = GetUserIdFromToken();
-            if (ride.UserId != userId)
-                throw new UnauthorizedAccessException("You cannot pay for another user's ride.");
 
-            // ✅ Update Ride Status
+            // 🔍 Get the latest ride not completed or paid
+            var ride = await rideRepository.GetLatestUnpaidRideByUserIdAsync(userId);
+
+            if (ride == null)
+                throw new NotFoundException("No unpaid or uncompleted ride found for payment.");
+
+            // ✅ Create payment
+            var payment = new Payment
+            {
+                RideId = ride.RideId,
+                Amount = ride.Fare,
+                Method = dto.Method,
+                Status = "Paid",
+                Timestamp = DateTime.UtcNow
+            };
+
+            var inserted = await _paymentRepo.InsertPaymentAsync(payment);
+
+            // ✅ Mark ride as completed
             ride.Status = "Completed";
+            await rideRepository.UpdateRideAsync(ride);
 
-            // 🔁 Save status change
-            await rideRepository.UpdateRideAsync(ride); // You’ll implement this method below
-
-            var payment = _mapper.Map<Payment>(dto);
-            payment.Timestamp = DateTime.UtcNow;
-
-            var result = await _paymentRepo.InsertPaymentAsync(payment);
-            var response = _mapper.Map<PaymentDTO>(result);
+            var response = _mapper.Map<PaymentDTO>(inserted);
             return Ok(response);
         }
 

@@ -8,6 +8,7 @@ namespace CabSystem.Repositories
         Task<List<Payment>> GetAllPaymentsAsync();
         Task<Payment?> GetPaymentByRideIdAsync(int rideId);
         Task<List<Payment>> GetPaymentsByUserIdAsync(int userId);
+        Task<Payment> InsertPaymentForLatestUnpaidRideAsync(int userId, string method);
 
 
     }
