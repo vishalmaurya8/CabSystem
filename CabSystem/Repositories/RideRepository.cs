@@ -27,7 +27,12 @@ namespace CabSystem.Repositories
             ride.Status = "Requested";
             _context.Rides.Add(ride);
             await _context.SaveChangesAsync();
-            return ride;
+
+            return await _context.Rides
+                .Include(r => r.Driver)
+                .ThenInclude(d => d.User)
+                .FirstOrDefaultAsync(r => r.RideId == ride.RideId);
+            //return ride;
         }
 
         public async Task<Ride?> CompleteRideAsync(int rideId)

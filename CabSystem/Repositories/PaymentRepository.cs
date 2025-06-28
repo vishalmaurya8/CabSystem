@@ -22,6 +22,8 @@ namespace CabSystem.Repositories
             //Re-fetch with Ride included
             return await _context.Payments
                 .Include(p => p.Ride)
+                .ThenInclude(r => r.Driver)
+                .ThenInclude(d => d.User)
                 .FirstOrDefaultAsync(p => p.PaymentId == payment.PaymentId);
         }
 

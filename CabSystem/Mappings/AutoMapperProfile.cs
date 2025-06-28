@@ -29,7 +29,7 @@ namespace CabSystem.Mappings
 
             // Ride <-> DTO mappings
             CreateMap<Ride, RideDTO>()
-            .ForMember(dest => dest.DriverNames, opt => opt.MapFrom(src => src.Driver != null ? src.Driver.User.Name : null))
+            .ForMember(dest => dest.DriverNames, opt => opt.MapFrom(src => src.Driver != null && src.Driver.User != null ? src.Driver.User.Name : null))
             .ForMember(dest => dest.PickupLocation, opt => opt.MapFrom(src => src.PickupLocation))
             .ForMember(dest => dest.DropoffLocation, opt => opt.MapFrom(src => src.DropoffLocation))
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
@@ -62,10 +62,9 @@ namespace CabSystem.Mappings
             //Payment contoller
             CreateMap<Payment, PaymentDTO>()
                 .ForMember(dest => dest.PickupLocation, opt => opt.MapFrom(src => src.Ride.PickupLocation))
-                .ForMember(dest => dest.DropoffLocation, opt => opt.MapFrom(src => src.Ride.DropoffLocation));
-
-
-
+                .ForMember(dest => dest.DropoffLocation, opt => opt.MapFrom(src => src.Ride.DropoffLocation))
+                .ForMember(dest => dest.DriverId, opt => opt.MapFrom(src => src.Ride.DriverId))
+                .ForMember(dest => dest.DriverName, opt => opt.MapFrom(src => src.Ride.Driver != null && src.Ride.Driver.User != null ? src.Ride.Driver.User.Name : null));
         }
     }
 }
