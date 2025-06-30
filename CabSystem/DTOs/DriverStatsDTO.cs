@@ -6,5 +6,6 @@ namespace CabSystem.DTOs
     {
         public int TotalRidesCompleted { get; set; }
         public double AverageRating { get; set; }
+        public decimal TotalProfit { get; set; }
     }
 }

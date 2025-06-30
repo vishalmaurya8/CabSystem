@@ -109,6 +109,29 @@ namespace CabSystem.Controllers
             return Ok(new { message = "Ride accepted successfully", RideId = updatedRide.RideId });
         }*/
 
+        [Authorize(Roles = "Driver")]
+        [HttpGet("completed-rides")]
+        public async Task<IActionResult> GetCompletedRides()
+        {
+            var userId = GetUserIdFromToken();
+            var driverId = await _driverRepo.GetDriverIdByUserIdAsync(userId);
+            if (driverId == null)
+                throw new NotFoundException("Driver profile not found.");
+
+            var rides = await _driverRepo.GetCompletedRidesForDriverAsync(driverId.Value);
+            var result = _mapper.Map<List<CompletedRideDTO>>(rides);
+            return Ok(result);
+        }
+
+        [Authorize(Roles = "Driver")]
+        [HttpGet("earnings")]
+        public async Task<IActionResult> GetEarnings()
+        {
+            var userId = GetUserIdFromToken();
+            var earnings = await _driverRepo.GetDriverEarningsAsync(userId);
+            return Ok(earnings);
+        }
+
         private int GetUserIdFromToken()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);

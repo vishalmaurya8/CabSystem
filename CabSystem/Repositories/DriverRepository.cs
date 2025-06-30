@@ -43,8 +43,8 @@ namespace CabSystem.Repositories
         public async Task<DriverStatsDTO> GetDriverStatsAsync(int userId)
         {
             var driver = await _context.Drivers
-                .Include(d => d.Rides) //eager load related rides
-                .ThenInclude(r => r.Rating) //if you're including ratings
+                .Include(d => d.Rides)
+                    .ThenInclude(r => r.Rating)
                 .FirstOrDefaultAsync(d => d.UserId == userId);
 
             if (driver == null)
@@ -59,10 +59,14 @@ namespace CabSystem.Repositories
                 .DefaultIfEmpty(0)
                 .Average();
 
+            var totalFare = completedRides.Sum(r => r.Fare);
+            var totalProfit = Math.Round(totalFare * 0.8m, 2);
+
             return new DriverStatsDTO
             {
                 TotalRidesCompleted = totalRidesCompleted,
-                AverageRating = averageRating
+                AverageRating = averageRating,
+                TotalProfit = totalProfit
             };
         }
 
@@ -117,5 +121,35 @@ namespace CabSystem.Repositories
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task<List<Ride>> GetCompletedRidesForDriverAsync(int driverId)
+        {
+            return await _context.Rides
+                .Where(r => r.DriverId == driverId && r.Status == "Completed")
+                .Include(r => r.User)
+                .ToListAsync();
+        }
+
+        public async Task<DriverEarningsDTO> GetDriverEarningsAsync(int userId)
+        {
+            // Get the driver's ID
+            var driver = await _context.Drivers.FirstOrDefaultAsync(d => d.UserId == userId);
+            if (driver == null)
+                throw new NotFoundException("Driver not found.");
+
+            // Sum fares of completed rides for this driver
+            var totalFare = await _context.Rides
+                .Where(r => r.DriverId == driver.DriverId && r.Status == "Completed")
+                .SumAsync(r => (decimal?)r.Fare) ?? 0m;
+
+            var driverProfit = Math.Round(totalFare * 0.8m, 2);
+
+            return new DriverEarningsDTO
+            {
+                TotalFare = totalFare,
+                DriverProfit = driverProfit
+            };
+        }
+
     }
 }

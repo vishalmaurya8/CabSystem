@@ -65,6 +65,11 @@ namespace CabSystem.Mappings
                 .ForMember(dest => dest.DropoffLocation, opt => opt.MapFrom(src => src.Ride.DropoffLocation))
                 .ForMember(dest => dest.DriverId, opt => opt.MapFrom(src => src.Ride.DriverId))
                 .ForMember(dest => dest.DriverName, opt => opt.MapFrom(src => src.Ride.Driver != null && src.Ride.Driver.User != null ? src.Ride.Driver.User.Name : null));
+
+            //Driver controller
+            CreateMap<Ride, CompletedRideDTO>()
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.Name : null));
+
         }
     }
 }

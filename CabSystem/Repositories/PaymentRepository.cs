@@ -42,8 +42,11 @@ namespace CabSystem.Repositories
         {
             return await _context.Payments
                 .Include(p => p.Ride)
-                .ThenInclude(r => r.User)
-                .Where(p => p.Ride.UserId == userId)
+                    .ThenInclude(r => r.Driver)
+                        .ThenInclude(d => d.User)
+                .Include(p => p.Ride)
+                    .ThenInclude(r => r.User)
+                    .Where(p => p.Ride.UserId == userId)
                 .ToListAsync();
         }
 
