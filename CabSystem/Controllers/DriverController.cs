@@ -50,7 +50,10 @@ namespace CabSystem.Controllers
 
             var userId = GetUserIdFromToken();
             await _driverRepo.UpdateDriverStatusAsync(userId, dto.Status);
-            return Ok("Driver status updated.");
+            return Ok(new 
+            { 
+                message= "Driver status updated."
+            });
         }
 
         // GET /api/driver/stats

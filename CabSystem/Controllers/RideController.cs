@@ -1,11 +1,11 @@
-﻿using AutoMapper;
+﻿using System.Security.Claims;
+using AutoMapper;
 using CabSystem.DTOs;
 using CabSystem.Exceptions; // ✅ Use your existing custom exception namespace
 using CabSystem.Models;
 using CabSystem.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace CabSystem.Controllers
 {
@@ -59,6 +59,25 @@ namespace CabSystem.Controllers
 
             var result = await _rideRepository.BookRideAsync(ride);
             return Ok(_mapper.Map<RideDTO>(result));
+        }
+
+        [Authorize(Roles = "User")]
+        [HttpGet("locations")]
+        public async Task<IActionResult> GetLocations()
+        {
+            var locations = new List<string>
+        {
+            "Delhi", "Noida", "Chennai", "Kerala", "Mumbai", "Pune", "Bangalore", "Hyderabad",
+            "Kolkata", "Howrah", "Lucknow", "Kanpur", "Indore", "Bhopal", "Nagpur", "Ahmedabad",
+            "Surat", "Jaipur", "Udaipur", "Chandigarh", "Shimla", "Goa", "Agra", "Mathura",
+            "Varanasi", "Allahabad", "Coimbatore", "Ooty", "Guwahati", "Shillong", "Bhubaneswar",
+            "Puri", "Patna", "Gaya", "Amritsar", "Ludhiana", "Jodhpur", "Ranchi", "Jamshedpur",
+            "Visakhapatnam", "Vijayawada", "Nashik", "Shirdi", "Dehradun", "Haridwar", "Pondicherry",
+            "Durgapur", "Faizabad", "Cochin", "Alleppey", "Mysore"
+        };
+
+            // Simulate an asynchronous operation
+            return await Task.FromResult(Ok(locations));
         }
 
         private int GetUserIdFromToken()
